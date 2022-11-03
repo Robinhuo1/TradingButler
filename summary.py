@@ -55,20 +55,24 @@ def get_positions(legs):
             current_positions[leg['symbol']] = []
             positions.append(current_positions[leg['symbol']])
         current_positions[leg['symbol']].append(leg)
-        if leg['quantity'] != positions[0][0]['quantity']:
+        if leg['quantity'] != current_positions[leg['symbol']][0]['quantity']:
             new_position = []
-            quantity = positions[0][0]['quantity'] - leg['quantity']
-            instruction = positions[0][0]['instruction']
-            price = positions[0][0]['price']
-            time = positions[0][0]['time']
-            leg.update({'quantity': quantity,
-                        'instruction': instruction,
-                        'price': price,
-                        'time': time})
-            new_position.append(leg)
+            # new_quantity = current_positions[leg['symbol']][0]['quantity'] - leg['quantity']
+            # current_positions[leg['symbol']][0].update({
+            #     'quantity': new_quantity
+            # })
+            quantity = current_positions[leg['symbol']][0]['quantity'] - leg['quantity']
+            new_leg = {
+                'symbol': current_positions[leg['symbol']][0]['symbol'],
+                'instruction': current_positions[leg['symbol']][0]['instruction'],
+                'quantity': quantity,
+                'price': current_positions[leg['symbol']][0]['price'],
+                'time': current_positions[leg['symbol']][0]['time']
+            }
+            new_position.append(new_leg)
             positions.append(new_position)
         if leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
-                del current_positions[leg['symbol']]
+            del current_positions[leg['symbol']]
     return positions
 
 

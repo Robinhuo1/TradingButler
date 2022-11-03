@@ -142,8 +142,8 @@ def test_partial_closing():
                 "symbol": "META",
                 "instruction": "SELL",
                 "quantity": Decimal(5.0).quantize(Decimal('.01'), ROUND_HALF_UP),
-                "price": Decimal(241.34).quantize(Decimal('.01'), ROUND_HALF_UP),
-                "time": datetime.datetime(2022, 10, 13)
+                "price": Decimal(232.11).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 10, 20)
             },
         ],
         [

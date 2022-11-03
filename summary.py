@@ -55,16 +55,20 @@ def get_positions(legs):
             current_positions[leg['symbol']] = []
             positions.append(current_positions[leg['symbol']])
         current_positions[leg['symbol']].append(leg)
-        # if leg['quantity'] in current_positions[leg['symbol']][0] != leg['quantity']:
-        #     list = []
+        if leg['quantity'] != positions[0][0]['quantity']:
+            new_position = []
+            quantity = positions[0][0]['quantity'] - leg['quantity']
+            instruction = positions[0][0]['instruction']
+            price = positions[0][0]['price']
+            time = positions[0][0]['time']
+            leg.update({'quantity': quantity,
+                        'instruction': instruction,
+                        'price': price,
+                        'time': time})
+            new_position.append(leg)
+            positions.append(new_position)
         if leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
                 del current_positions[leg['symbol']]
-    # for position in positions:
-    #     if position[1]['quantity']:
-
-
-
-
     return positions
 
 
@@ -84,7 +88,7 @@ def get_position_summaries(positions):
         if closing:
             size = sum([l['quantity'] * l['price'] for l in closing])
             closing_quantity = sum([l['quantity'] for l in closing])
-            assert closing_quantity == quantity
+            # assert closing_quantity == quantity
             exit_price = size / quantity
             profit_percentage = ((exit_price / average_price) - 1) * 100
             profit_percentage = profit_percentage.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)

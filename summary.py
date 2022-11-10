@@ -12,39 +12,44 @@ env = Environment(
 )
 
 
-def read_json_file(file_name):
-    with open(file_name, 'r') as f:
-        trades = json.load(f, parse_float=Decimal)
-    return reversed(trades)
+class BaseTradeImporter:
+    def __init__(self, path):
+        self.trades = self.read_file(path)
+        self.legs = self.get_legs(self.trades)
+
+    def read_file(self, path):
+        raise NotImplementedError
+
+    def get_legs(self, trades):
+        raise NotImplementedError
 
 
-def get_legs(trades):
-    legs = []
-    for trade in trades:
-        instruction = None
-        symbol = None
-        for order_leg in trade['orderLegCollection']:
-            instruction = order_leg['instruction']
-            symbol = order_leg['instrument']['symbol']
+class TdaTradeImporter(BaseTradeImporter):
+    def read_file(self, path):
+        with open(path, 'r') as f:
+            trades = json.load(f, parse_float=Decimal)
+        return reversed(trades)
 
-        for order_activity in trade['orderActivityCollection']:
-            for execution_leg in order_activity['executionLegs']:
-                legs.append({
-                    'quantity': execution_leg['quantity'],
-                    'price': execution_leg['price'],
-                    'time': execution_leg['time'],
-                    'instruction': instruction,
-                    'symbol': symbol
-                })
+    def get_legs(self, trades):
+        legs = []
+        for trade in trades:
+            instruction = None
+            symbol = None
+            for order_leg in trade['orderLegCollection']:
+                instruction = order_leg['instruction']
+                symbol = order_leg['instrument']['symbol']
 
-    return legs
+            for order_activity in trade['orderActivityCollection']:
+                for execution_leg in order_activity['executionLegs']:
+                    legs.append({
+                        'quantity': execution_leg['quantity'],
+                        'price': execution_leg['price'],
+                        'time': parse(execution_leg['time']),
+                        'instruction': instruction,
+                        'symbol': symbol
+                    })
 
-
-def parse_time(legs):
-    for leg in legs:
-        time = parse(leg['time'])
-        leg['time'] = time
-    return legs
+        return legs
 
 
 def get_positions(legs):
@@ -53,24 +58,37 @@ def get_positions(legs):
     for leg in legs:
         if not leg['symbol'] in current_positions:
             current_positions[leg['symbol']] = []
-            positions.append(current_positions[leg['symbol']])
-        current_positions[leg['symbol']].append(leg)
-        if leg['quantity'] != current_positions[leg['symbol']][0]['quantity']:
+            current_position = current_positions[leg['symbol']]
+            positions.append(current_position)
+        current_position.append(leg)
+        if leg['quantity'] != current_position[0]['quantity'] and leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
             new_position = []
-            # new_quantity = current_positions[leg['symbol']][0]['quantity'] - leg['quantity']
-            # current_positions[leg['symbol']][0].update({
-            #     'quantity': new_quantity
-            # })
-            quantity = current_positions[leg['symbol']][0]['quantity'] - leg['quantity']
+            if current_position[1]['instruction'] == 'BUY':
+                total = current_position[0]['quantity'] + current_position[1]['quantity']
+                del current_position[1]
+                current_position[0].update({
+                    'quantity': total
+                })
+            else:
+                total = current_position[0]['quantity']
+            quantity = total - leg['quantity']
             new_leg = {
-                'symbol': current_positions[leg['symbol']][0]['symbol'],
-                'instruction': current_positions[leg['symbol']][0]['instruction'],
+                'symbol': current_position[0]['symbol'],
+                'instruction': current_position[0]['instruction'],
                 'quantity': quantity,
-                'price': current_positions[leg['symbol']][0]['price'],
-                'time': current_positions[leg['symbol']][0]['time']
+                'price': current_position[0]['price'],
+                'time': current_position[0]['time']
             }
-            new_position.append(new_leg)
-            positions.append(new_position)
+            if quantity != 0:
+                new_quantity = total - leg['quantity']
+                current_position[0].update({
+                    'quantity': new_quantity
+                })
+            if current_position[0]['quantity'] != total:
+                new_position.append(new_leg)
+                positions.append(new_position)
+            # else:
+            #     del current_position[1]
         if leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
             del current_positions[leg['symbol']]
     return positions
@@ -91,8 +109,6 @@ def get_position_summaries(positions):
         entry_date = position[0]['time'].date()
         if closing:
             size = sum([l['quantity'] * l['price'] for l in closing])
-            closing_quantity = sum([l['quantity'] for l in closing])
-            # assert closing_quantity == quantity
             exit_price = size / quantity
             profit_percentage = ((exit_price / average_price) - 1) * 100
             profit_percentage = profit_percentage.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
@@ -132,13 +148,12 @@ def write_output(position_summaries, keys=None, template_file='template.html', o
 
 
 def main():
-    trades = read_json_file('trades.json')
-    legs = get_legs(trades)
-    legs = parse_time(legs)
-    positions = get_positions(legs)
+    importer = TdaTradeImporter('trades.json')
+    positions = get_positions(importer.legs)
     position_summaries = get_position_summaries(positions)
     write_output(position_summaries)
 
 
-main()
+if __name__ == '__main__':
+    main()
 

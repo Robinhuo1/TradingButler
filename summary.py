@@ -58,37 +58,38 @@ def get_positions(legs):
     for leg in legs:
         if not leg['symbol'] in current_positions:
             current_positions[leg['symbol']] = []
-            current_position = current_positions[leg['symbol']]
-            positions.append(current_position)
-        current_position.append(leg)
-        if leg['quantity'] != current_position[0]['quantity'] and leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
+            # current_position = current_positions[leg['symbol']]
+            positions.append(current_positions[leg['symbol']])
+        current_positions[leg['symbol']].append(leg)
+        if leg['quantity'] != current_positions[leg['symbol']][0]['quantity'] and leg['instruction'] in ['SELL', 'BUY_TO_COVER'] and leg['symbol'] == current_positions[leg['symbol']][0]['symbol']:
             new_position = []
-            if current_position[1]['instruction'] == 'BUY':
-                total = current_position[0]['quantity'] + current_position[1]['quantity']
-                del current_position[1]
-                current_position[0].update({
-                    'quantity': total
+            if current_positions[leg['symbol']][1]['instruction'] == 'BUY':
+                total = sum(position['quantity'] for position in current_positions[leg['symbol']] if position['instruction'] in ['BUY'])
+                total_price = sum(position['quantity'] * position['price'] for position in current_positions[leg['symbol']] if position['instruction'] in ['BUY'])
+                average_price = total_price / total
+                del current_positions[leg['symbol']][1]
+                current_positions[leg['symbol']][0].update({
+                    'quantity': total,
+                    'price': average_price
                 })
             else:
-                total = current_position[0]['quantity']
+                total = current_positions[leg['symbol']][0]['quantity']
             quantity = total - leg['quantity']
             new_leg = {
-                'symbol': current_position[0]['symbol'],
-                'instruction': current_position[0]['instruction'],
+                'symbol': current_positions[leg['symbol']][0]['symbol'],
+                'instruction': current_positions[leg['symbol']][0]['instruction'],
                 'quantity': quantity,
-                'price': current_position[0]['price'],
-                'time': current_position[0]['time']
+                'price': current_positions[leg['symbol']][0]['price'],
+                'time': current_positions[leg['symbol']][0]['time']
             }
             if quantity != 0:
                 new_quantity = total - leg['quantity']
-                current_position[0].update({
+                current_positions[leg['symbol']][0].update({
                     'quantity': new_quantity
                 })
-            if current_position[0]['quantity'] != total:
+            if current_positions[leg['symbol']][0]['quantity'] != total:
                 new_position.append(new_leg)
                 positions.append(new_position)
-            # else:
-            #     del current_position[1]
         if leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
             del current_positions[leg['symbol']]
     return positions

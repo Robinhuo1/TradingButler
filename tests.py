@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal, ROUND_HALF_UP
-from summary import get_positions, get_position_summaries
+from summary2 import get_positions, get_position_summaries
 
 fake_data = [{
     "symbol": "AAPL",
@@ -85,7 +85,7 @@ def test_get_position_summaries():
     assert position_summaries[2]['profit_percentage'] == None
 
 
-def test_partial_closing():
+def test_partial_closing1():
     partial_closing_trade = [
         {
             "symbol": "META",
@@ -102,33 +102,11 @@ def test_partial_closing():
             'price': Decimal(232.11).quantize(Decimal('.01'), ROUND_HALF_UP),
             'time': datetime.datetime(2022, 10, 20)
         },
-        {
-            "symbol": "GE",
-            'instruction': 'BUY',
-            'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
-            'price': Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
-            'time': datetime.datetime(2022, 9, 20)
-        },
 
-        {
-            "symbol": "GE",
-            'instruction': 'BUY',
-            'quantity': Decimal(6.0).quantize(Decimal('.01'), ROUND_HALF_UP),
-            'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
-            'time': datetime.datetime(2022, 10, 4)
-        },
-
-        {
-            "symbol": "GE",
-            'instruction': 'SELL',
-            'quantity': Decimal(18.0).quantize(Decimal('.01'), ROUND_HALF_UP),
-            'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
-            'time': datetime.datetime(2022, 10, 17)
-        }
     ]
 
     positions = get_positions(legs=partial_closing_trade)
-    assert len(positions) == 3
+    assert len(positions) == 2
     expected = [
         [
             {
@@ -154,22 +132,403 @@ def test_partial_closing():
                 "price": Decimal(241.34).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 10, 13)
             },
+        ]
+    ]
+
+    assert positions == expected
+
+
+def test_partial_closing2():
+    partial_closing_trade = [
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 9, 20)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(6.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 4)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(50.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 7)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'SELL',
+            'quantity': Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 17)
+        }
+    ]
+    positions = get_positions(legs=partial_closing_trade)
+    assert len(positions) == 2
+    expected = [
+        [
+            {
+                "symbol": "GE",
+                "instruction": "BUY",
+                "quantity": Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+
+            {
+                "symbol": "GE",
+                'instruction': 'SELL',
+                'quantity': Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'time': datetime.datetime(2022, 10, 17)
+            }
+        ],
+
+        [
+            {
+                "symbol": "GE",
+                "instruction": "BUY",
+                "quantity": Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+        ],
+    ]
+    assert positions == expected
+
+
+def test_partial_closing3():
+    partial_closing_trade = [
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 9, 20)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(6.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 4)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(50.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 7)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'SELL',
+            'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 17)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'SELL',
+            'quantity': Decimal(10.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(69.33).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 21)
+        }
+    ]
+    positions = get_positions(legs=partial_closing_trade)
+    assert len(positions) == 2
+    expected = [
+        [
+            {
+                "symbol": "GE",
+                "instruction": "BUY",
+                "quantity": Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+
+            {
+                "symbol": "GE",
+                'instruction': 'SELL',
+                'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'time': datetime.datetime(2022, 10, 17)
+            }
+        ],
+
+        [
+            {
+                "symbol": "GE",
+                "instruction": "BUY",
+                "quantity": Decimal(10.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+
+            {
+                "symbol": "GE",
+                "instruction": "SELL",
+                "quantity": Decimal(10.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(69.33).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 10, 21)
+            }
+        ],
+    ]
+    assert positions == expected
+
+
+def test_partial_closing4():
+    partial_closing_trade = [
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 9, 20)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(6.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 4)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(50.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 7)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'SELL',
+            'quantity': Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 17)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'SELL',
+            'quantity': Decimal(5.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(69.33).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 21)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'SELL',
+            'quantity': Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(70.55).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 26)
+        }
+    ]
+
+    positions = get_positions(legs=partial_closing_trade)
+    assert len(positions) == 4
+    expected = [
+        [
+            {
+                "symbol": "GE",
+                "instruction": "BUY",
+                "quantity": Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+
+            {
+                "symbol": "GE",
+                'instruction': 'SELL',
+                'quantity': Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'time': datetime.datetime(2022, 10, 17)
+            }
         ],
         [
             {
                 "symbol": "GE",
                 "instruction": "BUY",
-                "quantity": Decimal(18.0).quantize(Decimal('.01'), ROUND_HALF_UP),
-                "price": Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": Decimal(5.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 9, 20)
             },
+
             {
                 "symbol": "GE",
                 "instruction": "SELL",
-                "quantity": Decimal(18.0).quantize(Decimal('.01'), ROUND_HALF_UP),
-                "price": Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
-                "time": datetime.datetime(2022, 10, 17)
-            },
+                "quantity": Decimal(5.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(69.33).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 10, 21)
+            }
         ],
+        [
+            {
+                "symbol": "GE",
+                "instruction": "BUY",
+                "quantity": Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+
+            {
+                "symbol": "GE",
+                "instruction": "SELL",
+                "quantity": Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(69.33).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 10, 26)
+            }
+        ],
+        [
+            {
+                "symbol": "GE",
+                "instruction": "BUY",
+                "quantity": Decimal(2.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+        ]
+    ]
+    assert positions == expected
+
+
+def test_sell_short():
+    sell_short_trade = [
+        {
+            "symbol": "GE",
+            'instruction': 'SELL_SHORT',
+            'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 9, 20)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY_TO_COVER',
+            'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 4)
+        },
+    ]
+    positions = get_positions(legs=sell_short_trade)
+    assert len(positions) == 1
+    expected = [
+        [
+            {
+                "symbol": "GE",
+                "instruction": "SELL_SHORT",
+                "quantity": Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+
+            {
+                "symbol": "GE",
+                'instruction': 'BUY_TO_COVER',
+                'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'time': datetime.datetime(2022, 10, 4)
+            }
+        ]
+    ]
+    assert positions == expected
+
+
+def test_partial_sell_short1():
+    sell_short_trade = [
+        {
+            "symbol": "GE",
+            'instruction': 'SELL_SHORT',
+            'quantity': Decimal(7.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 9, 20)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'SELL_SHORT',
+            'quantity': Decimal(8.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(77.22).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 9, 28)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY_TO_COVER',
+            'quantity': Decimal(10.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 4)
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'BUY_TO_COVER',
+            'quantity': Decimal(3.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'price': Decimal(60.33).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'time': datetime.datetime(2022, 10, 8)
+        },
+    ]
+    positions = get_positions(legs=sell_short_trade)
+    assert len(positions) == 3
+    expected = [
+        [
+            {
+                "symbol": "GE",
+                "instruction": "SELL_SHORT",
+                "quantity": Decimal(10.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+
+            {
+                "symbol": "GE",
+                'instruction': 'BUY_TO_COVER',
+                'quantity': Decimal(10.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'time': datetime.datetime(2022, 10, 4)
+            }
+        ],
+        [
+            {
+                "symbol": "GE",
+                "instruction": "SELL_SHORT",
+                "quantity": Decimal(3.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            },
+
+            {
+                "symbol": "GE",
+                'instruction': 'BUY_TO_COVER',
+                'quantity': Decimal(3.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'price': Decimal(60.33).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'time': datetime.datetime(2022, 10, 8)
+            }
+        ],
+        [
+            {
+                "symbol": "GE",
+                "instruction": "SELL_SHORT",
+                "quantity": Decimal(2.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "price": Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "time": datetime.datetime(2022, 9, 20)
+            }
+        ]
     ]
     assert positions == expected

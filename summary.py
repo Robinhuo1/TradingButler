@@ -1,9 +1,15 @@
-import json
-from dateutil.parser import parse
-from decimal import Decimal, ROUND_HALF_UP
+import copy
 import datetime
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+import json
+import queue
+from decimal import ROUND_HALF_UP
+from decimal import Decimal
 from pathlib import Path
+
+from dateutil.parser import parse
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
+from jinja2 import select_autoescape
 
 base = Path(__file__).parents[0]
 env = Environment(
@@ -42,7 +48,7 @@ class TdaTradeImporter(BaseTradeImporter):
             for order_activity in trade['orderActivityCollection']:
                 for execution_leg in order_activity['executionLegs']:
                     legs.append({
-                        'quantity': execution_leg['quantity'],
+                        'quantity': int(execution_leg['quantity']),
                         'price': execution_leg['price'],
                         'time': parse(execution_leg['time']),
                         'instruction': instruction,
@@ -57,41 +63,38 @@ def get_positions(legs):
     current_positions = {}
     for leg in legs:
         if not leg['symbol'] in current_positions:
-            current_positions[leg['symbol']] = []
-            # current_position = current_positions[leg['symbol']]
-            positions.append(current_positions[leg['symbol']])
-        current_positions[leg['symbol']].append(leg)
-        if leg['quantity'] != current_positions[leg['symbol']][0]['quantity'] and leg['instruction'] in ['SELL', 'BUY_TO_COVER'] and leg['symbol'] == current_positions[leg['symbol']][0]['symbol']:
-            new_position = []
-            if current_positions[leg['symbol']][1]['instruction'] == 'BUY':
-                total = sum(position['quantity'] for position in current_positions[leg['symbol']] if position['instruction'] in ['BUY'])
-                total_price = sum(position['quantity'] * position['price'] for position in current_positions[leg['symbol']] if position['instruction'] in ['BUY'])
-                average_price = total_price / total
-                del current_positions[leg['symbol']][1]
-                current_positions[leg['symbol']][0].update({
-                    'quantity': total,
-                    'price': average_price
-                })
-            else:
-                total = current_positions[leg['symbol']][0]['quantity']
-            quantity = total - leg['quantity']
-            new_leg = {
-                'symbol': current_positions[leg['symbol']][0]['symbol'],
-                'instruction': current_positions[leg['symbol']][0]['instruction'],
-                'quantity': quantity,
-                'price': current_positions[leg['symbol']][0]['price'],
-                'time': current_positions[leg['symbol']][0]['time']
-            }
-            if quantity != 0:
-                new_quantity = total - leg['quantity']
-                current_positions[leg['symbol']][0].update({
-                    'quantity': new_quantity
-                })
-            if current_positions[leg['symbol']][0]['quantity'] != total:
-                new_position.append(new_leg)
-                positions.append(new_position)
-        if leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
-            del current_positions[leg['symbol']]
+            current_positions[leg['symbol']] = queue.Queue()
+        if leg['instruction'] in ['BUY', 'SELL_SHORT']:
+            quantity = leg['quantity']
+            for i in range(quantity):
+                leg_copy = copy.deepcopy(leg)
+                leg_copy['quantity'] = 1
+                current_positions[leg['symbol']].put(leg_copy)
+        elif leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
+            closing_quantity = leg['quantity']
+            to_be_closed = []
+            for i in range(closing_quantity):
+                share = current_positions[leg['symbol']].get()
+                to_be_closed.append(share)
+            assert len(to_be_closed) == closing_quantity
+            opening_leg = copy.deepcopy(to_be_closed[0])
+            opening_leg['quantity'] = len(to_be_closed)
+            opening_leg['price']
+            position = [opening_leg, leg]
+            positions.append(position)
+
+    # Add the open positions
+    for symbol, q in current_positions.items():
+        if q.qsize():
+            still_open = []
+            for i in range(q.qsize()):
+                still_open.append(q.get())
+            opening_leg = copy.deepcopy(still_open[0])
+            opening_leg['quantity'] = len(still_open)
+            opening_leg['price']
+            position = [opening_leg]
+            positions.append(position)
+
     return positions
 
 

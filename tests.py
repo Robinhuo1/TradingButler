@@ -1,6 +1,9 @@
 import datetime
-from decimal import Decimal, ROUND_HALF_UP
-from summary2 import get_positions, get_position_summaries
+from decimal import ROUND_HALF_UP
+from decimal import Decimal
+
+from summary import get_position_summaries
+from summary import get_positions
 
 fake_data = [{
     "symbol": "AAPL",
@@ -179,15 +182,15 @@ def test_partial_closing2():
             {
                 "symbol": "GE",
                 "instruction": "BUY",
-                "quantity": Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
-                "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": 11,
+                "price": Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 9, 20)
             },
 
             {
                 "symbol": "GE",
                 'instruction': 'SELL',
-                'quantity': Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'quantity': 11,
                 'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
                 'time': datetime.datetime(2022, 10, 17)
             }
@@ -197,7 +200,7 @@ def test_partial_closing2():
             {
                 "symbol": "GE",
                 "instruction": "BUY",
-                "quantity": Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": 11,
                 "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 9, 20)
             },
@@ -295,7 +298,7 @@ def test_partial_closing4():
         {
             "symbol": "GE",
             'instruction': 'BUY',
-            'quantity': Decimal(12.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'quantity': 12,
             'price': Decimal(72.01).quantize(Decimal('.01'), ROUND_HALF_UP),
             'time': datetime.datetime(2022, 9, 20)
         },
@@ -303,7 +306,7 @@ def test_partial_closing4():
         {
             "symbol": "GE",
             'instruction': 'BUY',
-            'quantity': Decimal(6.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'quantity': 6,
             'price': Decimal(54.21).quantize(Decimal('.01'), ROUND_HALF_UP),
             'time': datetime.datetime(2022, 10, 4)
         },
@@ -311,7 +314,7 @@ def test_partial_closing4():
         {
             "symbol": "GE",
             'instruction': 'BUY',
-            'quantity': Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'quantity': 4,
             'price': Decimal(50.21).quantize(Decimal('.01'), ROUND_HALF_UP),
             'time': datetime.datetime(2022, 10, 7)
         },
@@ -319,7 +322,7 @@ def test_partial_closing4():
         {
             "symbol": "GE",
             'instruction': 'SELL',
-            'quantity': Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'quantity': 11,
             'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
             'time': datetime.datetime(2022, 10, 17)
         },
@@ -327,7 +330,7 @@ def test_partial_closing4():
         {
             "symbol": "GE",
             'instruction': 'SELL',
-            'quantity': Decimal(5.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'quantity': 5,
             'price': Decimal(69.33).quantize(Decimal('.01'), ROUND_HALF_UP),
             'time': datetime.datetime(2022, 10, 21)
         },
@@ -335,7 +338,7 @@ def test_partial_closing4():
         {
             "symbol": "GE",
             'instruction': 'SELL',
-            'quantity': Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+            'quantity': 4,
             'price': Decimal(70.55).quantize(Decimal('.01'), ROUND_HALF_UP),
             'time': datetime.datetime(2022, 10, 26)
         }
@@ -348,7 +351,7 @@ def test_partial_closing4():
             {
                 "symbol": "GE",
                 "instruction": "BUY",
-                "quantity": Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": 11,
                 "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 9, 20)
             },
@@ -356,7 +359,7 @@ def test_partial_closing4():
             {
                 "symbol": "GE",
                 'instruction': 'SELL',
-                'quantity': Decimal(11.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                'quantity': 11,
                 'price': Decimal(65.14).quantize(Decimal('.01'), ROUND_HALF_UP),
                 'time': datetime.datetime(2022, 10, 17)
             }
@@ -365,7 +368,7 @@ def test_partial_closing4():
             {
                 "symbol": "GE",
                 "instruction": "BUY",
-                "quantity": Decimal(5.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": 5,
                 "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 9, 20)
             },
@@ -373,7 +376,7 @@ def test_partial_closing4():
             {
                 "symbol": "GE",
                 "instruction": "SELL",
-                "quantity": Decimal(5.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": 5,
                 "price": Decimal(69.33).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 10, 21)
             }
@@ -382,7 +385,7 @@ def test_partial_closing4():
             {
                 "symbol": "GE",
                 "instruction": "BUY",
-                "quantity": Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": 4,
                 "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 9, 20)
             },
@@ -390,7 +393,7 @@ def test_partial_closing4():
             {
                 "symbol": "GE",
                 "instruction": "SELL",
-                "quantity": Decimal(4.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": 4,
                 "price": Decimal(69.33).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 10, 26)
             }
@@ -399,7 +402,7 @@ def test_partial_closing4():
             {
                 "symbol": "GE",
                 "instruction": "BUY",
-                "quantity": Decimal(2.0).quantize(Decimal('.01'), ROUND_HALF_UP),
+                "quantity": 2,
                 "price": Decimal(63.19).quantize(Decimal('.01'), ROUND_HALF_UP),
                 "time": datetime.datetime(2022, 9, 20)
             },

@@ -70,6 +70,9 @@ def get_positions(legs):
                 leg_copy = copy.deepcopy(leg)
                 leg_copy['quantity'] = 1
                 current_positions[leg['symbol']].put(leg_copy)
+            total = current_positions[leg['symbol']].qsize()
+            total_price = sum(Decimal(leg['quantity']) * leg['price'] for leg in legs if leg['instruction'] in ['BUY', 'SELL_SHORT'])
+            average_price = (total_price / total).quantize(Decimal('.01'), ROUND_HALF_UP)
         elif leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
             closing_quantity = leg['quantity']
             to_be_closed = []
@@ -79,7 +82,7 @@ def get_positions(legs):
             assert len(to_be_closed) == closing_quantity
             opening_leg = copy.deepcopy(to_be_closed[0])
             opening_leg['quantity'] = len(to_be_closed)
-            opening_leg['price']
+            # opening_leg['price'] = average_price
             position = [opening_leg, leg]
             positions.append(position)
 
@@ -91,7 +94,7 @@ def get_positions(legs):
                 still_open.append(q.get())
             opening_leg = copy.deepcopy(still_open[0])
             opening_leg['quantity'] = len(still_open)
-            opening_leg['price']
+            # opening_leg['price']
             position = [opening_leg]
             positions.append(position)
 
@@ -103,40 +106,46 @@ def get_position_summaries(positions):
     for position in positions:
         position_summary = {}
         position_summaries.append(position_summary)
+        number_legs = len(position)
         opening = [l for l in position if l['instruction'] in ['BUY', 'SELL_SHORT']]
         closing = [l for l in position if l['instruction'] in ['SELL', 'BUY_TO_COVER']]
-        quantity = sum([l['quantity'] for l in opening])
+        quantity = int(sum([l['quantity'] for l in opening]))
         risk = sum([l['quantity'] * l['price'] for l in opening])
+        rounded_risk = risk.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
         average_price = risk / quantity
+        rounded_average_price = average_price.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
         symbol = opening[0]['symbol']
         direction = 'Long' if opening[0]['instruction'] == 'BUY' else 'Short'
         entry_date = position[0]['time'].date()
         if closing:
             size = sum([l['quantity'] * l['price'] for l in closing])
             exit_price = size / quantity
+            rounded_exit_price = exit_price.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
             profit_percentage = ((exit_price / average_price) - 1) * 100
             profit_percentage = profit_percentage.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             profit = size - risk
+            rounded_profit = profit.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
             exit_date = position[-1]['time'].date()
             days = (exit_date - entry_date).days
         else:
-            exit_price = None
+            rounded_exit_price = None
             exit_date = None
-            profit = None
+            rounded_profit = None
             profit_percentage = None
             days = (datetime.datetime.now().date() - entry_date).days
         position_summary.update({
             'symbol': symbol,
-            'risk': risk,
+            'risk': rounded_risk,
             'entry_date': entry_date,
-            'average_price': average_price,
-            'exit_price': exit_price,
+            'average_price': rounded_average_price,
+            'exit_price': rounded_exit_price,
             'exit_date': exit_date,
             'days': days,
             'quantity': quantity,
             'direction': direction,
-            'profit': profit,
-            'profit_percentage': profit_percentage
+            'profit': rounded_profit,
+            'profit_percentage': profit_percentage,
+            'number_legs': number_legs
         })
     return position_summaries
 
@@ -144,7 +153,7 @@ def get_position_summaries(positions):
 def write_output(position_summaries, keys=None, template_file='template.html', output_file='output.html'):
     if keys is None:
         keys = ['symbol', 'direction', 'entry_date', 'average_price', 'exit_price', 'exit_date', 'days', 'quantity', 'risk',
-                'profit_percentage', 'profit']
+                'profit_percentage', 'profit', 'number_legs']
     template = env.get_template(template_file)
     output = template.render(position_summaries=position_summaries, keys=keys)
     with open(output_file, 'w') as f:

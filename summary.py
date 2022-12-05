@@ -41,7 +41,7 @@ class TdaTradeImporter(BaseTradeImporter):
         for trade in trades:
             instruction = None
             symbol = None
-            orderId = trade['orderId']
+            order_id = trade['orderId']
             for order_leg in trade['orderLegCollection']:
                 instruction = order_leg['instruction']
                 symbol = order_leg['instrument']['symbol']
@@ -54,7 +54,7 @@ class TdaTradeImporter(BaseTradeImporter):
                         'time': parse(execution_leg['time']),
                         'instruction': instruction,
                         'symbol': symbol,
-                        'orderID': orderId
+                        'order_id': order_id
                     })
 
         return legs
@@ -62,50 +62,49 @@ class TdaTradeImporter(BaseTradeImporter):
 
 def get_positions(legs):
     positions = []
-    original_legs = []
     current_positions = {}
     for leg in legs:
         if not leg['symbol'] in current_positions:
             current_positions[leg['symbol']] = queue.Queue()
         if leg['instruction'] in ['BUY', 'SELL_SHORT']:
-            original_leg = copy.deepcopy(leg)
-            original_legs.append(original_leg)
             quantity = leg['quantity']
             for i in range(quantity):
                 leg_copy = copy.deepcopy(leg)
                 leg_copy['quantity'] = 1
                 current_positions[leg['symbol']].put(leg_copy)
-            # unique_legs = list({l['orderId']: l for l in open}.values())
-            # total = current_positions[leg['symbol']].qsize()
         elif leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
             closing_quantity = leg['quantity']
             to_be_closed = []
             for i in range(closing_quantity):
-                closing_share = current_positions[leg['symbol']].get()
-                to_be_closed.append(closing_share)
-            total_price = sum(Decimal(leg['quantity']) * leg['price'] for leg in to_be_closed)
-            average_price = (total_price / Decimal(closing_quantity)).quantize(Decimal('.01'), ROUND_HALF_UP)
+                share = current_positions[leg['symbol']].get()
+                to_be_closed.append(share)
+            risk = sum(share['price'] for share in to_be_closed)
+            average_price = (risk / closing_quantity).quantize(Decimal('.0001'), ROUND_HALF_UP)
             assert len(to_be_closed) == closing_quantity
             opening_leg = copy.deepcopy(to_be_closed[0])
             opening_leg['quantity'] = len(to_be_closed)
             opening_leg['price'] = average_price
+            opening_leg['risk'] = risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
+            order_ids = [share['order_id'] for share in to_be_closed]
+            order_ids.append(leg['order_id'])
+            opening_leg['order_ids'] = order_ids
             position = [opening_leg, leg]
             positions.append(position)
 
     # Add the open positions
     for symbol, q in current_positions.items():
         if q.qsize():
-            remaining_quantity = q.qsize()
             still_open = []
             for i in range(q.qsize()):
                 still_open.append(q.get())
-            unique_legs = list({l['orderId']:l for l in still_open}.values())
-            total_price = sum(Decimal(leg['quantity']) * leg['price'] for leg in still_open)
-            average_price = (total_price / Decimal(remaining_quantity)).quantize(Decimal('.01'), ROUND_HALF_UP)
+            risk = sum(share['price'] for share in still_open)
+            average_price = (risk / len(still_open)).quantize(Decimal('.0001'), ROUND_HALF_UP)
             opening_leg = copy.deepcopy(still_open[0])
-
             opening_leg['quantity'] = len(still_open)
             opening_leg['price'] = average_price
+            opening_leg['risk'] = risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
+            order_ids = [share['order_id'] for share in still_open]
+            opening_leg['order_ids'] = order_ids
             position = [opening_leg]
             positions.append(position)
     return positions
@@ -116,20 +115,16 @@ def get_position_summaries(positions):
     for position in positions:
         position_summary = {}
         position_summaries.append(position_summary)
-        number_legs = len(position)
-        opening = [l for l in position if l['instruction'] in ['BUY', 'SELL_SHORT']]
-        closing = [l for l in position if l['instruction'] in ['SELL', 'BUY_TO_COVER']]
-        quantity = sum([l['quantity'] for l in opening])
-        risk = sum([l['quantity'] * l['price'] for l in opening])
-        rounded_risk = risk.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
+        order_ids = position[0]['order_ids']
+        number_legs = len(set(order_ids))
+        risk = position[0]['risk']
+        quantity = position[0]['quantity']
         price = position[0]['price']
-        # average_price = risk / quantity
-        # rounded_average_price = average_price.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
-        symbol = opening[0]['symbol']
-        direction = 'Long' if opening[0]['instruction'] == 'BUY' else 'Short'
+        symbol = position[0]['symbol']
+        direction = 'Long' if position[0]['instruction'] == 'BUY' else 'Short'
         entry_date = position[0]['time'].date()
-        if closing:
-            size = sum([l['quantity'] * l['price'] for l in closing])
+        if len(position) > 1:
+            size = quantity * position[1]['price']
             exit_price = size / quantity
             rounded_exit_price = exit_price.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
             profit_percentage = ((exit_price / price) - 1) * 100
@@ -146,7 +141,7 @@ def get_position_summaries(positions):
             days = (datetime.datetime.now().date() - entry_date).days
         position_summary.update({
             'symbol': symbol,
-            'risk': rounded_risk,
+            'risk': risk,
             'entry_date': entry_date,
             'average_price': price,
             'exit_price': rounded_exit_price,

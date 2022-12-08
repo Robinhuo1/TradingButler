@@ -93,14 +93,22 @@ def get_positions(legs):
                 to_be_closed.append(share)
             risk = sum(share['price'] for share in to_be_closed)
             average_price = (risk / closing_quantity).quantize(Decimal('.0001'), ROUND_HALF_UP)
-            assert len(to_be_closed) == closing_quantity
-            symbol = share['symbol']
-            instruction = share['instruction']
-            time = share['time']
-            opening_leg = {'symbol': symbol, 'instruction': instruction, 'quantity': len(to_be_closed), 'price': average_price, 'time': time,
-                           'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)}
-            closing_leg = {'symbol': symbol, 'instruction': closing_instruction, 'quantity': closing_quantity,
-                           'price': closing_price, 'time': closing_time}
+            symbol = to_be_closed[0]['symbol']
+            instruction = to_be_closed[0]['instruction']
+            time = to_be_closed[0]['time']
+            opening_leg = {'symbol': symbol,
+                           'instruction': instruction,
+                           'quantity': len(to_be_closed),
+                           'price': average_price,
+                           'time': time,
+                           'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
+                           }
+            closing_leg = {'symbol': symbol,
+                           'instruction': closing_instruction,
+                           'quantity': closing_quantity,
+                           'price': closing_price,
+                           'time': closing_time
+                           }
             order_ids = [share['order_id'] for share in to_be_closed]
             order_ids.append(leg['order_id'])
             position = {
@@ -118,11 +126,16 @@ def get_positions(legs):
                 still_open.append(q.get())
             risk = sum(share['price'] for share in still_open)
             average_price = (risk / len(still_open)).quantize(Decimal('.0001'), ROUND_HALF_UP)
-            symbol = share['symbol']
-            instruction = share['instruction']
-            time = share['time']
-            opening_leg = {'symbol': symbol, 'instruction': instruction, 'quantity': len(still_open),
-                           'price': average_price, 'time': time, 'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)}
+            symbol = still_open[0]['symbol']
+            instruction = still_open[0]['instruction']
+            time = still_open[0]['time']
+            opening_leg = {'symbol': symbol,
+                           'instruction': instruction,
+                           'quantity': len(still_open),
+                           'price': average_price,
+                           'time': time,
+                           'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
+                           }
             order_ids = [share['order_id'] for share in still_open]
             position = {
                 'opening': opening_leg,
@@ -145,7 +158,7 @@ def get_position_summaries(positions):
         symbol = position['opening']['symbol']
         direction = 'Long' if position['opening']['instruction'] == 'BUY' else 'Short'
         entry_date = position['opening']['time'].date()
-        if len(position) > 2:
+        if 'closing' in position:
             size = quantity * position['closing']['price']
             exit_price = size / quantity
             rounded_exit_price = exit_price.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)

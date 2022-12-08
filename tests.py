@@ -5,14 +5,14 @@ from decimal import Decimal
 from summary import get_position_summaries
 from summary import get_positions
 
-imaginary_trades = [{
+legs = [{
     "symbol": "AAPL",
     "instruction": "BUY",
     "quantity": 16,
     "price": Decimal(29.34),
     "time": datetime.datetime(2022, 9, 23),
     'order_id': 1
-    },
+},
 
     {
         "symbol": "AAPL",
@@ -53,7 +53,7 @@ imaginary_trades = [{
 
 
 def test_get_positions():
-    positions = get_positions(legs=imaginary_trades)
+    positions = get_positions(legs=legs)
     assert len(positions) == 3
     assert positions[0]['opening']['symbol'] == 'AAPL'
     assert len(positions[0]) == 3
@@ -75,7 +75,7 @@ def test_get_positions():
 
 
 def test_get_position_summaries():
-    positions = get_positions(imaginary_trades)
+    positions = get_positions(legs)
     position_summaries = get_position_summaries(positions)
     assert len(position_summaries) == 3
     assert position_summaries[1]['symbol'] == 'ATT'
@@ -95,7 +95,7 @@ def test_get_position_summaries():
     assert position_summaries[2]['profit_percentage'] == None
 
 
-def test_partial_single_position():
+def test_partial_closing():
     data = [
         {
             "symbol": "META",
@@ -427,7 +427,7 @@ def test_partial_closing_multiple_sells():
     assert positions == expected
 
 
-def test_sell_short_full_closed():
+def test_sell_short_fully_closed():
     data = [
         {
             "symbol": "GE",
@@ -475,7 +475,7 @@ def test_sell_short_full_closed():
     assert positions == expected
 
 
-def test_partial_sell_short_multiple_positions():
+def test_partial_closing_sell_short_multiple_positions():
     data = [
         {
             "symbol": "GE",
@@ -573,3 +573,28 @@ def test_partial_sell_short_multiple_positions():
         }
     ]
     assert positions == expected
+
+
+def test_closing_more_share_than_open_fails():
+    data = [
+        {
+            "symbol": "GE",
+            'instruction': 'BUY',
+            'quantity': 5,
+            'price': Decimal(72.01),
+            'time': datetime.datetime(2022, 9, 20),
+            'order_id': 1
+        },
+
+        {
+            "symbol": "GE",
+            'instruction': 'SELL',
+            'quantity': 10,
+            'price': Decimal(54.21),
+            'time': datetime.datetime(2022, 10, 4),
+            'order_id': 2
+        },
+    ]
+    buy_quantity = data[0]['quantity']
+    sell_quantity = data[1]['quantity']
+    assert buy_quantity == sell_quantity

@@ -89,7 +89,10 @@ def get_positions(legs):
             closing_time = leg['time']
             to_be_closed = []
             for i in range(closing_quantity):
-                share = current_positions[leg['symbol']].get()
+                try:
+                    share = current_positions[leg['symbol']].get(block=False)
+                except queue.Empty:
+                    raise ValueError('closing more shares than open')
                 to_be_closed.append(share)
             risk = sum(share['price'] for share in to_be_closed)
             average_price = (risk / closing_quantity).quantize(Decimal('.0001'), ROUND_HALF_UP)

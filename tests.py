@@ -1,38 +1,37 @@
 import datetime
 from decimal import Decimal
 from decimal import ROUND_HALF_UP
+
 import pytest
 
 from summary import get_position_summaries
 from summary import get_positions
 
-legs = [{
-    "symbol": "AAPL",
-    "instruction": "BUY",
-    "quantity": 16,
-    "price": Decimal('29.34'),
-    "time": datetime.datetime(2022, 9, 23),
-    'order_id': 1
-},
-
+legs = [
     {
-        "symbol": "AAPL",
+        'symbol': 'AAPL',
+        'instruction': 'BUY',
+        'quantity': 16,
+        'price': Decimal('29.34'),
+        'time': datetime.datetime(2022, 9, 23),
+        'order_id': 1
+    },
+    {
+        'symbol': 'AAPL',
         'instruction': 'SELL',
         'quantity': 16,
         'price': Decimal('222.22'),
         'time': datetime.datetime(2022, 10, 10),
         'order_id': 2
     },
-
     {
-        "symbol": "ATT",
+        'symbol': 'ATT',
         'instruction': 'BUY',
         'quantity': 6,
         'price': Decimal('81.55'),
         'time': datetime.datetime(2022, 9, 10),
         'order_id': 3
     },
-
     {
         "symbol": "ATT",
         'instruction': 'SELL',
@@ -41,9 +40,8 @@ legs = [{
         'time': datetime.datetime(2022, 9, 20),
         'order_id': 4
     },
-
     {
-        "symbol": "AMZN",
+        'symbol': 'AMZN',
         'instruction': 'BUY',
         'quantity': 12,
         'price': Decimal('75.25'),
@@ -99,16 +97,15 @@ def test_get_position_summaries():
 def test_partial_closing():
     data = [
         {
-            "symbol": "META",
-            "instruction": "BUY",
-            "quantity": 10,
-            "price": Decimal('241.34'),
-            "time": datetime.datetime(2022, 10, 13),
+            'symbol': 'META',
+            'instruction': 'BUY',
+            'quantity': 10,
+            'price': Decimal('241.34'),
+            'time': datetime.datetime(2022, 10, 13),
             'order_id': 1
         },
-
         {
-            "symbol": "META",
+            'symbol': 'META',
             'instruction': 'SELL',
             'quantity': 5,
             'price': Decimal('232.11'),
@@ -155,41 +152,37 @@ def test_partial_closing():
                 [1, 1, 1, 1, 1]
         }
     ]
-
     assert positions == expected
 
 
 def test_partial_closing_multiple_buys():
     data = [
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 12,
             'price': Decimal('72.01'),
             'time': datetime.datetime(2022, 9, 20),
             'order_id': 1
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 6,
             'price': Decimal('54.21'),
             'time': datetime.datetime(2022, 10, 4),
             'order_id': 2
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 4,
             'price': Decimal('50.21'),
             'time': datetime.datetime(2022, 10, 7),
             'order_id': 3
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'SELL',
             'quantity': 11,
             'price': Decimal('65.14'),
@@ -235,32 +228,29 @@ def test_partial_closing_multiple_buys():
                 [1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3]
         }
     ]
-
     assert positions == expected
 
 
 def test_only_buy():
     data = [
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 12,
             'price': Decimal('72.01'),
             'time': datetime.datetime(2022, 9, 20),
             'order_id': 1
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 6,
             'price': Decimal('54.21'),
             'time': datetime.datetime(2022, 10, 4),
             'order_id': 2
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 4,
             'price': Decimal('50.21'),
@@ -291,52 +281,47 @@ def test_only_buy():
 def test_partial_closing_multiple_sells():
     data = [
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 12,
             'price': Decimal('72.01'),
             'time': datetime.datetime(2022, 9, 20),
             'order_id': 1
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 6,
             'price': Decimal('54.21'),
             'time': datetime.datetime(2022, 10, 4),
             'order_id': 2
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 4,
             'price': Decimal('50.21'),
             'time': datetime.datetime(2022, 10, 7),
             'order_id': 3
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'SELL',
             'quantity': 11,
             'price': Decimal('65.14'),
             'time': datetime.datetime(2022, 10, 17),
             'order_id': 4
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'SELL',
             'quantity': 5,
             'price': Decimal('69.33'),
             'time': datetime.datetime(2022, 10, 21),
             'order_id': 5
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'SELL',
             'quantity': 4,
             'price': Decimal('70.55'),
@@ -431,16 +416,15 @@ def test_partial_closing_multiple_sells():
 def test_sell_short_fully_closed():
     data = [
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'SELL_SHORT',
             'quantity': 12,
             'price': Decimal('72.01'),
             'time': datetime.datetime(2022, 9, 20),
             'order_id': 1
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY_TO_COVER',
             'quantity': 12,
             'price': Decimal('54.21'),
@@ -479,34 +463,31 @@ def test_sell_short_fully_closed():
 def test_partial_closing_sell_short_multiple_positions():
     data = [
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'SELL_SHORT',
             'quantity': 7,
             'price': Decimal('72.01'),
             'time': datetime.datetime(2022, 9, 20),
             'order_id': 1
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'SELL_SHORT',
             'quantity': 8,
             'price': Decimal('77.22'),
             'time': datetime.datetime(2022, 9, 28),
             'order_id': 2
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY_TO_COVER',
             'quantity': 10,
             'price': Decimal('54.21'),
             'time': datetime.datetime(2022, 10, 4),
             'order_id': 3
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY_TO_COVER',
             'quantity': 3,
             'price': Decimal('60.33'),
@@ -579,16 +560,15 @@ def test_partial_closing_sell_short_multiple_positions():
 def test_closing_more_shares_than_open_fails():
     data = [
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'BUY',
             'quantity': 5,
             'price': Decimal('72.01'),
             'time': datetime.datetime(2022, 9, 20),
             'order_id': 1
         },
-
         {
-            "symbol": "GE",
+            'symbol': 'GE',
             'instruction': 'SELL',
             'quantity': 10,
             'price': Decimal('54.21'),

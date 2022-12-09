@@ -48,14 +48,15 @@ class TdaTradeImporter(BaseTradeImporter):
 
             for order_activity in trade['orderActivityCollection']:
                 for execution_leg in order_activity['executionLegs']:
-                    legs.append({
-                        'quantity': int(execution_leg['quantity']),
-                        'price': execution_leg['price'],
-                        'time': parse(execution_leg['time']),
-                        'instruction': instruction,
-                        'symbol': symbol,
-                        'order_id': order_id
-                    })
+                    legs.append(
+                        {
+                            'quantity': int(execution_leg['quantity']),
+                            'price': execution_leg['price'],
+                            'time': parse(execution_leg['time']),
+                            'instruction': instruction,
+                            'symbol': symbol,
+                            'order_id': order_id
+                        })
 
         return legs
 
@@ -99,19 +100,21 @@ def get_positions(legs):
             symbol = to_be_closed[0]['symbol']
             instruction = to_be_closed[0]['instruction']
             time = to_be_closed[0]['time']
-            opening_leg = {'symbol': symbol,
-                           'instruction': instruction,
-                           'quantity': len(to_be_closed),
-                           'price': average_price,
-                           'time': time,
-                           'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
-                           }
-            closing_leg = {'symbol': symbol,
-                           'instruction': closing_instruction,
-                           'quantity': closing_quantity,
-                           'price': closing_price,
-                           'time': closing_time
-                           }
+            opening_leg = {
+                'symbol': symbol,
+                'instruction': instruction,
+                'quantity': len(to_be_closed),
+                'price': average_price,
+                'time': time,
+                'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
+            }
+            closing_leg = {
+                'symbol': symbol,
+                'instruction': closing_instruction,
+                'quantity': closing_quantity,
+                'price': closing_price,
+                'time': closing_time
+            }
             order_ids = [share['order_id'] for share in to_be_closed]
             order_ids.append(leg['order_id'])
             position = {
@@ -132,13 +135,14 @@ def get_positions(legs):
             symbol = still_open[0]['symbol']
             instruction = still_open[0]['instruction']
             time = still_open[0]['time']
-            opening_leg = {'symbol': symbol,
-                           'instruction': instruction,
-                           'quantity': len(still_open),
-                           'price': average_price,
-                           'time': time,
-                           'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
-                           }
+            opening_leg = {
+                'symbol': symbol,
+                'instruction': instruction,
+                'quantity': len(still_open),
+                'price': average_price,
+                'time': time,
+                'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
+            }
             order_ids = [share['order_id'] for share in still_open]
             position = {
                 'opening': opening_leg,
@@ -177,27 +181,28 @@ def get_position_summaries(positions):
             rounded_profit = None
             profit_percentage = None
             days = (datetime.datetime.now().date() - entry_date).days
-        position_summary.update({
-            'symbol': symbol,
-            'risk': risk,
-            'entry_date': entry_date,
-            'average_price': price,
-            'exit_price': rounded_exit_price,
-            'exit_date': exit_date,
-            'days': days,
-            'quantity': quantity,
-            'direction': direction,
-            'profit': rounded_profit,
-            'profit_percentage': profit_percentage,
-            'number_legs': number_legs
-        })
+        position_summary.update(
+            {
+                'symbol': symbol,
+                'risk': risk,
+                'entry_date': entry_date,
+                'average_price': price,
+                'exit_price': rounded_exit_price,
+                'exit_date': exit_date,
+                'days': days,
+                'quantity': quantity,
+                'direction': direction,
+                'profit': rounded_profit,
+                'profit_percentage': profit_percentage,
+                'number_legs': number_legs
+            })
     return position_summaries
 
 
 def write_output(position_summaries, keys=None, template_file='template.html', output_file='output.html'):
     if keys is None:
-        keys = ['symbol', 'direction', 'entry_date', 'average_price', 'exit_price', 'exit_date', 'days', 'quantity', 'risk',
-                'profit_percentage', 'profit', 'number_legs']
+        keys = ['symbol', 'direction', 'entry_date', 'average_price', 'exit_price', 'exit_date', 'days', 'quantity',
+                'risk', 'profit_percentage', 'profit', 'number_legs']
     template = env.get_template(template_file)
     output = template.render(position_summaries=position_summaries, keys=keys)
     with open(output_file, 'w') as f:
@@ -213,4 +218,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

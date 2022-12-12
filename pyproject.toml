@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "tradingbutler"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Robin Huo"]
 readme = "README.md"
+homepage = "https://github.com/Robinhuo1/tradingbutler"
+license = "mit"
 
 [tool.poetry.dependencies]
 python = "^3.8"

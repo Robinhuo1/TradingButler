@@ -204,14 +204,3 @@ def write_output(position_summaries, keys=None, template_file='template.html', o
     output = template.render(position_summaries=position_summaries, keys=keys)
     with open(output_file, 'w') as f:
         f.write(output)
-
-
-def main():
-    importer = TdaTradeImporter('trades.json')
-    positions = get_positions(importer.legs)
-    position_summaries = get_position_summaries(positions)
-    write_output(position_summaries)
-
-
-if __name__ == '__main__':
-    main()

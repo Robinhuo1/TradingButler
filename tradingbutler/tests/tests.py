@@ -4,8 +4,8 @@ from decimal import ROUND_HALF_UP
 
 import pytest
 
-from summary import get_position_summaries
-from summary import get_positions
+from tradingbutler.summary import get_position_summaries
+from tradingbutler.summary import get_positions
 
 legs = [
     {

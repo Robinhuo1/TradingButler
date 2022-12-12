@@ -3,16 +3,14 @@ import json
 import queue
 from decimal import ROUND_HALF_UP
 from decimal import Decimal
-from pathlib import Path
 
 from dateutil.parser import parse
 from jinja2 import Environment
-from jinja2 import FileSystemLoader
+from jinja2 import PackageLoader
 from jinja2 import select_autoescape
 
-base = Path(__file__).parents[0]
 env = Environment(
-    loader=FileSystemLoader(base),
+    loader=PackageLoader(__package__),
     autoescape=select_autoescape()
 )
 

@@ -1,6 +1,6 @@
 import datetime
 import json
-import queue
+from collections import deque
 from decimal import ROUND_HALF_UP
 from decimal import Decimal
 
@@ -62,7 +62,7 @@ def get_positions(legs):
     current_positions = {}
     for leg in legs:
         if not leg['symbol'] in current_positions:
-            current_positions[leg['symbol']] = queue.Queue()
+            current_positions[leg['symbol']] = deque()
         if leg['instruction'] in ['BUY', 'SELL_SHORT']:
             quantity = leg['quantity']
             for i in range(quantity):
@@ -78,7 +78,7 @@ def get_positions(legs):
                     'time': time,
                     'order_id': order_id
                 }
-                current_positions[leg['symbol']].put(share)
+                current_positions[leg['symbol']].append(share)
         elif leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
             closing_quantity = leg['quantity']
             closing_instruction = leg['instruction']
@@ -87,9 +87,9 @@ def get_positions(legs):
             to_be_closed = []
             for i in range(closing_quantity):
                 try:
-                    share = current_positions[leg['symbol']].get(block=False)
-                except queue.Empty:
-                    raise ValueError('closing more shares than open')
+                    share = current_positions[leg['symbol']].popleft()
+                except IndexError:
+                    raise IndexError('closing more shares than open')
                 to_be_closed.append(share)
             risk = sum(share['price'] for share in to_be_closed)
             average_price = (risk / closing_quantity).quantize(Decimal('.0001'), ROUND_HALF_UP)
@@ -121,30 +121,29 @@ def get_positions(legs):
             positions.append(position)
 
     # Add the open positions
-    for symbol, q in current_positions.items():
-        if q.qsize():
-            still_open = []
-            for i in range(q.qsize()):
-                still_open.append(q.get())
-            risk = sum(share['price'] for share in still_open)
-            average_price = (risk / len(still_open)).quantize(Decimal('.0001'), ROUND_HALF_UP)
-            symbol = still_open[0]['symbol']
-            instruction = still_open[0]['instruction']
-            time = still_open[0]['time']
-            opening_leg = {
-                'symbol': symbol,
-                'instruction': instruction,
-                'quantity': len(still_open),
-                'price': average_price,
-                'time': time,
-                'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
-            }
-            order_ids = [share['order_id'] for share in still_open]
-            position = {
-                'opening': opening_leg,
-                'order_ids': order_ids
-            }
-            positions.append(position)
+    if current_positions[leg['symbol']]:
+        still_open = []
+        for i in range(len(current_positions[leg['symbol']])):
+            still_open.append(current_positions[leg['symbol']].popleft())
+        risk = sum(share['price'] for share in still_open)
+        average_price = (risk / len(still_open)).quantize(Decimal('.0001'), ROUND_HALF_UP)
+        symbol = still_open[0]['symbol']
+        instruction = still_open[0]['instruction']
+        time = still_open[0]['time']
+        opening_leg = {
+            'symbol': symbol,
+            'instruction': instruction,
+            'quantity': len(still_open),
+            'price': average_price,
+            'time': time,
+            'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
+        }
+        order_ids = [share['order_id'] for share in still_open]
+        position = {
+            'opening': opening_leg,
+            'order_ids': order_ids
+        }
+        positions.append(position)
     return positions
 
 
@@ -165,9 +164,9 @@ def get_position_summaries(positions):
             size = quantity * position['closing']['price']
             exit_price = size / quantity
             rounded_exit_price = exit_price.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
-            profit_percentage = ((exit_price / price) - 1) * 100
+            profit_percentage = abs(((exit_price / price) - 1) * 100)
             profit_percentage = profit_percentage.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            profit = size - risk
+            profit = abs(size - risk)
             rounded_profit = profit.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
             exit_date = position['closing']['time'].date()
             days = (exit_date - entry_date).days

@@ -10,7 +10,7 @@ from tradingbutler.summary import get_positions
 legs = [
     {
         'symbol': 'AAPL',
-        'instruction': 'BUY',
+        'instruction': 'SELL_SHORT',
         'quantity': 16,
         'price': Decimal('29.34'),
         'time': datetime.datetime(2022, 9, 23),
@@ -18,9 +18,9 @@ legs = [
     },
     {
         'symbol': 'AAPL',
-        'instruction': 'SELL',
+        'instruction': 'BUY_TO_COVER',
         'quantity': 16,
-        'price': Decimal('222.22'),
+        'price': Decimal('23.7'),
         'time': datetime.datetime(2022, 10, 10),
         'order_id': 2
     },
@@ -56,9 +56,9 @@ def test_get_positions():
     assert len(positions) == 3
     assert positions[0]['opening']['symbol'] == 'AAPL'
     assert len(positions[0]) == 3
-    assert positions[0]['opening']['instruction'] == 'BUY'
+    assert positions[0]['opening']['instruction'] == 'SELL_SHORT'
     assert positions[0]['opening']['price'] == Decimal('29.34')
-    assert positions[0]['closing']['instruction'] == 'SELL'
+    assert positions[0]['closing']['instruction'] == 'BUY_TO_COVER'
     assert len(set(positions[0]['order_ids'])) == 2
     assert positions[1]['opening']['symbol'] == 'ATT'
     assert len(positions[1]) == 3
@@ -77,6 +77,7 @@ def test_get_position_summaries():
     positions = get_positions(legs)
     position_summaries = get_position_summaries(positions)
     assert len(position_summaries) == 3
+    assert position_summaries[0]['symbol'] == 'AAPL'
     assert position_summaries[1]['symbol'] == 'ATT'
     assert position_summaries[1]['average_price'] == Decimal('81.55')
     assert position_summaries[1]['risk'] == Decimal('489.300')
@@ -576,6 +577,6 @@ def test_closing_more_shares_than_open_fails():
             'order_id': 2
         },
     ]
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(Exception) as excinfo:
         get_positions(legs=data)
     assert excinfo.value.args[0] == 'closing more shares than open'

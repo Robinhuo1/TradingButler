@@ -577,6 +577,6 @@ def test_closing_more_shares_than_open_fails():
             'order_id': 2
         },
     ]
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         get_positions(legs=data)
     assert excinfo.value.args[0] == 'closing more shares than open'

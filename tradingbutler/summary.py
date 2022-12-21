@@ -89,7 +89,7 @@ def get_positions(legs):
                 try:
                     share = current_positions[leg['symbol']].popleft()
                 except IndexError:
-                    raise IndexError('closing more shares than open')
+                    raise ValueError('closing more shares than open')
                 to_be_closed.append(share)
             risk = sum(share['price'] for share in to_be_closed)
             average_price = (risk / closing_quantity).quantize(Decimal('.0001'), ROUND_HALF_UP)

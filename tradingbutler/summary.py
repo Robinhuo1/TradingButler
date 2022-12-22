@@ -121,29 +121,30 @@ def get_positions(legs):
             positions.append(position)
 
     # Add the open positions
-    if current_positions[leg['symbol']]:
-        still_open = []
-        for i in range(len(current_positions[leg['symbol']])):
-            still_open.append(current_positions[leg['symbol']].popleft())
-        risk = sum(share['price'] for share in still_open)
-        average_price = (risk / len(still_open)).quantize(Decimal('.0001'), ROUND_HALF_UP)
-        symbol = still_open[0]['symbol']
-        instruction = still_open[0]['instruction']
-        time = still_open[0]['time']
-        opening_leg = {
-            'symbol': symbol,
-            'instruction': instruction,
-            'quantity': len(still_open),
-            'price': average_price,
-            'time': time,
-            'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
-        }
-        order_ids = [share['order_id'] for share in still_open]
-        position = {
-            'opening': opening_leg,
-            'order_ids': order_ids
-        }
-        positions.append(position)
+    for q in list(current_positions[leg['symbol']]):
+        if current_positions[leg['symbol']]:
+            still_open = []
+            for i in range(len(current_positions[leg['symbol']])):
+                still_open.append(current_positions[leg['symbol']].popleft())
+            risk = sum(share['price'] for share in still_open)
+            average_price = (risk / len(still_open)).quantize(Decimal('.0001'), ROUND_HALF_UP)
+            symbol = still_open[0]['symbol']
+            instruction = still_open[0]['instruction']
+            time = still_open[0]['time']
+            opening_leg = {
+                'symbol': symbol,
+                'instruction': instruction,
+                'quantity': len(still_open),
+                'price': average_price,
+                'time': time,
+                'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
+            }
+            order_ids = [share['order_id'] for share in still_open]
+            position = {
+                'opening': opening_leg,
+                'order_ids': order_ids
+            }
+            positions.append(position)
     return positions
 
 
@@ -164,12 +165,16 @@ def get_position_summaries(positions):
             size = quantity * position['closing']['price']
             exit_price = size / quantity
             rounded_exit_price = exit_price.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
-            profit_percentage = abs(((exit_price / price) - 1) * 100)
+            profit_percentage = ((exit_price / price) - 1) * 100
             profit_percentage = profit_percentage.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            profit = abs(size - risk)
+            profit = size - risk
             rounded_profit = profit.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
             exit_date = position['closing']['time'].date()
             days = (exit_date - entry_date).days
+            if 'BUY_TO_COVER' in position['closing']['instruction']:
+                rounded_profit = rounded_profit * -1
+                profit_percentage = profit_percentage * -1
+
         else:
             rounded_exit_price = None
             exit_date = None

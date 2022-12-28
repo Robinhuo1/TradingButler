@@ -16,24 +16,27 @@ env = Environment(
 
 
 class BaseTradeImporter:
-    def __init__(self, path):
-        self.trades = self.read_file(path)
+    def __init__(self, json_string):
+        self.trades = json.loads(json_string, parse_float=Decimal)
         self.legs = self.get_legs(self.trades)
 
+    @classmethod
+    def from_path(cls, path):
+        json_string = cls.read_file(cls, path)
+        return cls(json_string)
+
     def read_file(self, path):
-        raise NotImplementedError
+        with open(path, 'r') as f:
+            json_string = f.read()
+        return json_string
 
     def get_legs(self, trades):
         raise NotImplementedError
 
 
 class TdaTradeImporter(BaseTradeImporter):
-    def read_file(self, path):
-        with open(path, 'r') as f:
-            trades = json.load(f, parse_float=Decimal)
-        return reversed(trades)
-
     def get_legs(self, trades):
+        trades = reversed(trades)
         legs = []
         for trade in trades:
             instruction = None
@@ -121,7 +124,7 @@ def get_positions(legs):
             positions.append(position)
 
     # Add the open positions
-    for q in list(current_positions[leg['symbol']]):
+    for elem in deque(current_positions[leg['symbol']]):
         if current_positions[leg['symbol']]:
             still_open = []
             for i in range(len(current_positions[leg['symbol']])):

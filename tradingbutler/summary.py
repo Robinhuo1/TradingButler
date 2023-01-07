@@ -124,7 +124,7 @@ def get_positions(legs):
             positions.append(position)
 
     # Add the open positions
-    for elem in deque(current_positions[leg['symbol']]):
+    for symbol, q in current_positions.items():
         if current_positions[leg['symbol']]:
             still_open = []
             for i in range(len(current_positions[leg['symbol']])):

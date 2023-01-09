@@ -125,10 +125,10 @@ def get_positions(legs):
 
     # Add the open positions
     for symbol, q in current_positions.items():
-        if current_positions[leg['symbol']]:
+        if len(q):
             still_open = []
-            for i in range(len(current_positions[leg['symbol']])):
-                still_open.append(current_positions[leg['symbol']].popleft())
+            for i in range(len(q)):
+                still_open.append(q.popleft())
             risk = sum(share['price'] for share in still_open)
             average_price = (risk / len(still_open)).quantize(Decimal('.0001'), ROUND_HALF_UP)
             symbol = still_open[0]['symbol']

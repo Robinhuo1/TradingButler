@@ -116,7 +116,7 @@ def get_positions(legs):
             }
             order_ids = [share['order_id'] for share in to_be_closed]
             order_ids.append(leg['order_id'])
-            order_ids = sorted(list(set(order_ids)))
+            order_ids = sorted(set(order_ids))
             position = {
                 'opening': opening_leg,
                 'closing': closing_leg,
@@ -144,6 +144,7 @@ def get_positions(legs):
                 'risk': risk.quantize(Decimal('.0001'), ROUND_HALF_UP)
             }
             order_ids = [share['order_id'] for share in still_open]
+            order_ids = sorted(set(order_ids))
             position = {
                 'opening': opening_leg,
                 'order_ids': order_ids

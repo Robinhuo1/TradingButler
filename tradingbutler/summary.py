@@ -196,7 +196,8 @@ def get_position_summaries(positions):
             'direction': direction,
             'profit': rounded_profit,
             'profit_percentage': profit_percentage,
-            'number_legs': number_legs
+            'number_legs': number_legs,
+            'order_ids': order_ids
         })
     return position_summaries
 

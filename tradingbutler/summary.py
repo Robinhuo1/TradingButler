@@ -151,7 +151,9 @@ def get_positions(legs):
     return positions
 
 
-def get_position_summaries(positions):
+def get_position_summaries(positions, current_date=None):
+    if current_date is None:
+        current_date = datetime.datetime.now().date()
     position_summaries = []
     for position in positions:
         position_summary = {}
@@ -177,13 +179,12 @@ def get_position_summaries(positions):
             if 'BUY_TO_COVER' in position['closing']['instruction']:
                 rounded_profit = rounded_profit * -1
                 profit_percentage = profit_percentage * -1
-
         else:
             rounded_exit_price = None
             exit_date = None
             rounded_profit = None
             profit_percentage = None
-            days = (datetime.datetime.now().date() - entry_date).days
+            days = (current_date - entry_date).days
         position_summary.update({
             'symbol': symbol,
             'risk': risk,

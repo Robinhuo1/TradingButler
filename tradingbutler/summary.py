@@ -17,7 +17,13 @@ env = Environment(
 
 class BaseTradeImporter:
     def __init__(self, json_string):
-        self.trades = json.loads(json_string, parse_float=Decimal)
+        parsed = json.loads(json_string, parse_float=Decimal)
+        if isinstance(parsed, list):
+            self.trades = parsed
+        elif isinstance(parsed, dict):
+            self.trades = [parsed]
+        else:
+            raise ValueError
         self.legs = self.get_legs(self.trades)
 
     @classmethod

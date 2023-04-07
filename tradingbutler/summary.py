@@ -16,7 +16,7 @@ env = Environment(
 
 
 class BaseTradeImporter:
-    def __init__(self, json_string):
+    def __init__(self, json_string, descending=False):
         parsed = json.loads(json_string, parse_float=Decimal)
         if isinstance(parsed, list):
             self.trades = parsed
@@ -25,6 +25,7 @@ class BaseTradeImporter:
         else:
             raise ValueError
         self.legs = self.get_legs(self.trades)
+        self.descending = descending
 
     @classmethod
     def from_path(cls, path):
@@ -42,7 +43,8 @@ class BaseTradeImporter:
 
 class TdaTradeImporter(BaseTradeImporter):
     def get_legs(self, trades):
-        trades = reversed(trades)
+        if not self.descending:
+            trades = reversed(trades)
         legs = []
         for trade in trades:
             instruction = None

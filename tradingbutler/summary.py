@@ -24,8 +24,8 @@ class BaseTradeImporter:
             self.trades = [parsed]
         else:
             raise ValueError
-        self.legs = self.get_legs(self.trades)
         self.descending = descending
+        self.legs = self.get_legs(self.trades)
 
     @classmethod
     def from_path(cls, path):

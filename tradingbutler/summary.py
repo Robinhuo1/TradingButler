@@ -54,7 +54,8 @@ class TdaTradeImporter(BaseTradeImporter):
                 instruction = order_leg['instruction']
                 symbol = order_leg['instrument']['symbol']
 
-            for order_activity in trade['orderActivityCollection']:
+            activities = sorted(trade['orderActivityCollection'], key=lambda x: x['activityId'])
+            for order_activity in activities:
                 for execution_leg in order_activity['executionLegs']:
                     legs.append({
                         'quantity': int(execution_leg['quantity']),
@@ -62,7 +63,8 @@ class TdaTradeImporter(BaseTradeImporter):
                         'time': parse(execution_leg['time']),
                         'instruction': instruction,
                         'symbol': symbol,
-                        'order_id': order_id
+                        'order_id': order_id,
+                        'activity_id': order_activity['activityId'],
                     })
 
         return legs
@@ -82,12 +84,14 @@ def get_positions(legs):
                 price = leg['price']
                 time = leg['time']
                 order_id = leg['order_id']
+                activity_id = leg['activity_id']
                 share = {
                     'symbol': symbol,
                     'instruction': instruction,
                     'price': price,
                     'time': time,
-                    'order_id': order_id
+                    'order_id': order_id,
+                    'activity_id': activity_id
                 }
                 current_positions[leg['symbol']].append(share)
         elif leg['instruction'] in ['SELL', 'BUY_TO_COVER']:
@@ -125,10 +129,14 @@ def get_positions(legs):
             order_ids = [share['order_id'] for share in to_be_closed]
             order_ids.append(leg['order_id'])
             order_ids = sorted(set(order_ids))
+            activity_ids = [share['activity_id'] for share in to_be_closed]
+            activity_ids.append(leg['activity_id'])
+            activity_ids = sorted(set(activity_ids))
             position = {
                 'opening': opening_leg,
                 'closing': closing_leg,
-                'order_ids': order_ids
+                'order_ids': order_ids,
+                'activity_ids': activity_ids
             }
             positions.append(position)
 
@@ -153,9 +161,12 @@ def get_positions(legs):
             }
             order_ids = [share['order_id'] for share in still_open]
             order_ids = sorted(set(order_ids))
+            activity_ids = [share['activity_id'] for share in still_open]
+            activity_ids = sorted(set(activity_ids))
             position = {
                 'opening': opening_leg,
-                'order_ids': order_ids
+                'order_ids': order_ids,
+                'activity_ids': activity_ids
             }
             positions.append(position)
     return positions
@@ -169,6 +180,7 @@ def get_position_summaries(positions, current_date=None):
         position_summary = {}
         position_summaries.append(position_summary)
         order_ids = position['order_ids']
+        activity_ids = position['activity_ids']
         number_legs = len(set(order_ids))
         risk = position['opening']['risk']
         quantity = position['opening']['quantity']
@@ -208,7 +220,8 @@ def get_position_summaries(positions, current_date=None):
             'profit': rounded_profit,
             'profit_percentage': profit_percentage,
             'number_legs': number_legs,
-            'order_ids': order_ids
+            'order_ids': order_ids,
+            'activity_ids': activity_ids
         })
     return position_summaries
 

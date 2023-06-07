@@ -54,18 +54,19 @@ class TdaTradeImporter(BaseTradeImporter):
                 instruction = order_leg['instruction']
                 symbol = order_leg['instrument']['symbol']
 
-            activities = sorted(trade['orderActivityCollection'], key=lambda x: x['activityId'])
-            for order_activity in activities:
-                for execution_leg in order_activity['executionLegs']:
-                    legs.append({
-                        'quantity': int(execution_leg['quantity']),
-                        'price': execution_leg['price'],
-                        'time': parse(execution_leg['time']),
-                        'instruction': instruction,
-                        'symbol': symbol,
-                        'order_id': order_id,
-                        'activity_id': order_activity['activityId'],
-                    })
+            if 'orderActivityCollection' in trade:
+                activities = sorted(trade['orderActivityCollection'], key=lambda x: x['activityId'])
+                for order_activity in activities:
+                    for execution_leg in order_activity['executionLegs']:
+                        legs.append({
+                            'quantity': int(execution_leg['quantity']),
+                            'price': execution_leg['price'],
+                            'time': parse(execution_leg['time']),
+                            'instruction': instruction,
+                            'symbol': symbol,
+                            'order_id': order_id,
+                            'activity_id': order_activity['activityId'],
+                        })
 
         return legs
 

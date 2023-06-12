@@ -130,8 +130,9 @@ def get_positions(legs):
             order_ids = [share['order_id'] for share in to_be_closed]
             order_ids.append(leg['order_id'])
             order_ids = sorted(set(order_ids))
-            activity_ids = [share['activity_id'] for share in to_be_closed]
-            activity_ids.append(leg['activity_id'])
+            activity_ids = [share['activity_id'] for share in to_be_closed if share['activity_id']]
+            if leg['activity_id']:
+                activity_ids.append(leg['activity_id'])
             activity_ids = sorted(set(activity_ids))
             position = {
                 'opening': opening_leg,
@@ -162,7 +163,7 @@ def get_positions(legs):
             }
             order_ids = [share['order_id'] for share in still_open]
             order_ids = sorted(set(order_ids))
-            activity_ids = [share['activity_id'] for share in still_open]
+            activity_ids = [share['activity_id'] for share in still_open if share['activity_id']]
             activity_ids = sorted(set(activity_ids))
             position = {
                 'opening': opening_leg,
